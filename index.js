@@ -37,8 +37,6 @@ app.use((req, res, next) => {
 
 // Api Route
 let totalRoutes = 0;
-// Api Route
-let totalRoutes = 0;
 const loadedFiles = new Set(); // Track loaded files
 const apiFolder = path.join(__dirname, './src/api');
 
