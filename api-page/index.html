@@ -1,1 +1,84 @@
-<h1>API Home</h1>
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Buat API Key</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, button { padding: 8px; width: 100%; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Buat API Key Baru</h1>
+    
+    <div class="form-group">
+        <label for="masterKey">Master Key Anda:</label>
+        <input type="password" id="masterKey" placeholder="Masukkan master key">
+    </div>
+    
+    <div class="form-group">
+        <label for="ownerName">Nama Pemilik:</label>
+        <input type="text" id="ownerName" placeholder="Nama pemilik key">
+    </div>
+    
+    <div class="form-group">
+        <label for="expiryDays">Masa Berlaku (hari):</label>
+        <input type="number" id="expiryDays" placeholder="Kosongkan untuk unlimited">
+    </div>
+    
+    <button onclick="createApiKey()">Buat API Key</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function createApiKey() {
+            const masterKey = document.getElementById('masterKey').value;
+            const owner = document.getElementById('ownerName').value;
+            const expiryDays = document.getElementById('expiryDays').value;
+            
+            if (!masterKey || !owner) {
+                showResult('Master key dan nama pemilik wajib diisi', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/apikey/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': masterKey
+                    },
+                    body: JSON.stringify({
+                        owner: owner,
+                        expiresInDays: expiryDays || undefined
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.status) {
+                    showResult(`
+                        <strong>API Key Berhasil Dibuat!</strong><br><br>
+                        <strong>Key:</strong> ${data.key}<br>
+                        <strong>Pemilik:</strong> ${data.details.owner}<br>
+                        <strong>Kadaluarsa:</strong> ${data.details.expiresAt ? new Date(data.details.expiresAt).toLocaleString() : 'Tidak ada'}
+                    `, 'success');
+                } else {
+                    showResult(`Gagal: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.style.color = type === 'error' ? 'red' : 'green';
+        }
+    </script>
+</body>
+</html>
