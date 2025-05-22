@@ -1,51 +1,52 @@
 const { addApiKey, generateRandomKey, canCreateKeys } = require('./middleware/apikey');
 
 module.exports = function(app) {
-  app.post('/apikey/create', (req, res) => {
+  app.get('/api/createkey', (req, res) => {
     try {
-      const { owner, expiresInDays } = req.body;
-      const requestApiKey = req?.query?.apikey || req?.headers?.['x-api-key'];
+      // Parameter dari query string
+      const { owner, expires, secret } = req.query;
       
-      // Check if requester has permission to create keys
-      if (!requestApiKey || !canCreateKeys(requestApiKey)) {
+      // Secret key khusus untuk verifikasi
+      const MASTER_SECRET = "RAHASIA_AND123"; // Ganti dengan secret key kuat
+      
+      // Verifikasi secret key
+      if (secret !== MASTER_SECRET) {
         return res.status(403).json({ 
-          status: false, 
-          message: 'Only special API keys can create new keys' 
+          success: false,
+          message: 'Invalid secret key' 
         });
       }
 
       if (!owner) {
         return res.status(400).json({ 
-          status: false, 
-          message: 'Owner name is required' 
+          success: false,
+          message: 'Parameter owner diperlukan' 
         });
       }
 
-      const expiresAt = expiresInDays ? 
-        new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString() : 
+      // Hitung expiry date jika ada
+      const expiresAt = expires ? 
+        new Date(Date.now() + parseInt(expires) * 24 * 60 * 60 * 1000).toISOString() : 
         null;
 
+      // Generate key baru
       const newKey = addApiKey({
         key: generateRandomKey(),
         owner,
         expiresAt
       });
 
+      // Response sederhana
       res.json({
-        status: true,
-        message: expiresAt ? 
-          `API key created (expires on ${new Date(expiresAt).toLocaleDateString()})` : 
-          'Unlimited API key created',
+        success: true,
         key: newKey.key,
-        details: {
-          owner: newKey.owner,
-          expiresAt: newKey.expiresAt
-        }
+        owner: newKey.owner,
+        expires: newKey.expiresAt || 'Tidak ada masa berlaku'
       });
 
     } catch (error) {
-      res.status(400).json({
-        status: false,
+      res.status(500).json({
+        success: false,
         message: error.message
       });
     }
