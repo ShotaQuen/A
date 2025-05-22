@@ -1,6 +1,12 @@
 {
   "apikeys": [
-    { "key": "abc123", "owner": "user1" },
-    { "key": "def456", "owner": "user2" }
+    {
+      "key": "MASTER_KEY_abc123def456",
+      "owner": "admin",
+      "createdAt": "2023-05-15T10:30:00.000Z",
+      "expiresAt": null,
+      "isActive": true,
+      "canCreateKeys": true
+    }
   ]
 }
