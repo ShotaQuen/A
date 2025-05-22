@@ -1,0 +1,12 @@
+{
+  "apikeys": [
+    {
+      "key": "MASTER_KEY_abc123def456",
+      "owner": "admin",
+      "createdAt": "2023-05-15T10:30:00.000Z",
+      "expiresAt": null,
+      "isActive": true,
+      "canCreateKeys": true
+    }
+  ]
+}
