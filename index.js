@@ -37,20 +37,43 @@ app.use((req, res, next) => {
 
 // Api Route
 let totalRoutes = 0;
+// Api Route
+let totalRoutes = 0;
+const loadedFiles = new Set(); // Track loaded files
 const apiFolder = path.join(__dirname, './src/api');
-fs.readdirSync(apiFolder).forEach((subfolder) => {
-    const subfolderPath = path.join(apiFolder, subfolder);
-    if (fs.statSync(subfolderPath).isDirectory()) {
-        fs.readdirSync(subfolderPath).forEach((file) => {
-            const filePath = path.join(subfolderPath, file);
-            if (path.extname(file) === '.js') {
-                require(filePath)(app);
-                totalRoutes++;
-                console.log(chalk.bgHex('#FFFF99').hex('#333').bold(` Loaded Route: ${path.basename(file)} `));
+
+// Error handling wrapper
+const loadRoutes = (folder) => {
+    fs.readdirSync(folder).forEach(item => {
+        const fullPath = path.join(folder, item);
+        const stat = fs.statSync(fullPath);
+
+        if (stat.isDirectory()) {
+            loadRoutes(fullPath); // Recursively process subdirectories
+            return;
+        }
+
+        // Only process .js files that haven't been loaded
+        if (path.extname(item) === '.js' && !loadedFiles.has(fullPath)) {
+            try {
+                const module = require(fullPath);
+                
+                if (typeof module === 'function') {
+                    module(app);
+                    loadedFiles.add(fullPath);
+                    totalRoutes++;
+                    console.log(chalk.bgHex('#FFFF99').hex('#333').bold(` Loaded Route: ${item} `));
+                } else {
+                    console.error(chalk.bgRed.white.bold(` SKIPPED: ${item} - Does not export a function `));
+                }
+            } catch (error) {
+                console.error(chalk.bgRed.white.bold(` ERROR in ${item}: ${error.message} `));
             }
-        });
-    }
-});
+        }
+    });
+};
+
+loadRoutes(apiFolder);
 console.log(chalk.bgHex('#90EE90').hex('#333').bold(' Load Complete! ✓ '));
 console.log(chalk.bgHex('#90EE90').hex('#333').bold(` Total Routes Loaded: ${totalRoutes} `));
 
